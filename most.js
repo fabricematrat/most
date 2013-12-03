@@ -43,18 +43,26 @@ function create(emitter) {
  * @return {Stream} stream
  */
 function fromArray(array) {
-	return new Stream(function(next, end) {
-		try {
-			forEach.call(array, function(x) {
-				next(x);
-			});
-			end();
-		} catch(e) {
-			end(e);
-		}
+    return new Stream(function(next, end) {
+        function recursive(a) {
+            if(a.length > 0) {
+                next(a[0]);
+                async(function() {
+                    recursive(a.slice(1));
+                });
+            } else {
+                end();
+            }
+        }
 
-		return noop;
-	});
+        try {
+            recursive(array);
+        } catch(e) {
+            end(e);
+        }
+
+        return noop;
+    });
 }
 
 /**
