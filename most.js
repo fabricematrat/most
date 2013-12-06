@@ -9,6 +9,7 @@
  */
 
 var Stream = require('./Stream');
+var async = require('./async');
 
 module.exports = create;
 
@@ -47,13 +48,12 @@ function fromArray(array) {
         function recursive(a) {
             if(a.length > 0) {
                 try {
-                    next(a[0]);
+                    next(a[0]) && async(function() {
+                        recursive(a.slice(1));
+                    });
                 } catch (e) {
                     end(e);
                 }
-                async(function() {
-                    recursive(a.slice(1));
-                });
             } else {
                 end();
             }
