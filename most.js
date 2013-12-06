@@ -46,7 +46,11 @@ function fromArray(array) {
     return new Stream(function(next, end) {
         function recursive(a) {
             if(a.length > 0) {
-                next(a[0]);
+                try {
+                    next(a[0]);
+                } catch (e) {
+                    end(e);
+                }
                 async(function() {
                     recursive(a.slice(1));
                 });
@@ -55,11 +59,7 @@ function fromArray(array) {
             }
         }
 
-        try {
-            recursive(array);
-        } catch(e) {
-            end(e);
-        }
+        recursive(array);
 
         return noop;
     });
