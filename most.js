@@ -48,9 +48,13 @@ function fromArray(array) {
         function recursive(a) {
             if(a.length > 0) {
                 try {
-                    next(a[0]) && async(function() {
-                        recursive(a.slice(1));
-                    });
+                    if (!next(a[0])) {
+                        async(function() {
+                            recursive(a.slice(1));
+                        });
+                    } else {
+                        end();
+                    }
                 } catch (e) {
                     end(e);
                 }

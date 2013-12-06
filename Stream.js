@@ -81,11 +81,11 @@ proto.forEach = function(next, end) {
 
 	function safeNext(x) {
 		if(ended || unsubscribed) {
-			return unsubscribed;
+			return true;
 		}
 		next(x);
 
-        return !unsubscribed;
+        return false;
 	}
 
 	function safeEnd() {

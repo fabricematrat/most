@@ -15,10 +15,6 @@ describe('most', function() {
                 expect(e).not.toBeDefined();
                 done();
             });
-        })/*,
-        it('if unsubscribed it should stop the loop', function(done) {
-            most.fromArray([1,2,3,4]).take(2).forEach(next, function(e) {
-            });
-        }); */
+        });
     });
 });
