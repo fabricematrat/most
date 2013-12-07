@@ -216,35 +216,35 @@ proto.takeWhile = function(predicate) {
 };
 
 proto.repeat = function(n){
-    var i =0;
-    var predicate = function() {
-        i++;
-        return (i < n);
-    };
-    return this.repeatUntil(predicate)
+	var i =0;
+	var predicate = function() {
+		i++;
+		return (i < n);
+	};
+	return this.repeatUntil(predicate)
 };
 
 proto.cycle = function() {
-    return this.repeatUntil(function() {
-        return true;
-    });
+	return this.repeatUntil(function() {
+		return true;
+	});
 };
 
 proto.repeatUntil = function(predicate){
-    var stream = this._emitter;
-    var recursive = function(next, end) {
-        stream(next, function(e){
-            if(e == null) {
-                predicate() ? recursive(next, end) : end();
-            } else {
-                end(e);
-            }
-        });
-    };
+	var stream = this._emitter;
+	var recursive = function(next, end) {
+		stream(next, function(e){
+			if(e == null) {
+				predicate() ? recursive(next, end) : end();
+			} else {
+				end(e);
+			}
+		});
+	};
 
-    return new Stream(function(next, end) {
-        recursive(next, end);
-    });
+	return new Stream(function(next, end) {
+		recursive(next, end);
+	});
 };
 
 proto.buffer = function(windower) {

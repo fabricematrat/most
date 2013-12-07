@@ -534,29 +534,29 @@ describe('Stream', function() {
 		});
 	});
 
-    describe('repeat', function() {
-        it('should stop after 2 round', function(done) {
-            var first = [1, 2];
-            var s1 = new Stream(function(next, end) {
-                first.forEach(next);
-                end();
-            });
+	describe('repeat', function() {
+		it('should stop after 2 round', function(done) {
+			var first = [1, 2];
+			var s1 = new Stream(function(next, end) {
+				first.forEach(next);
+				end();
+			});
 
-            var s2 = s1.repeat(2);
-            expect(s2).not.toBe(s1);
-            expect(s2 instanceof s1.constructor).toBeTrue();
+			var s2 = s1.repeat(2);
+			expect(s2).not.toBe(s1);
+			expect(s2 instanceof s1.constructor).toBeTrue();
 
-            var result = [];
-            s2.forEach(function(x) {
-                result.push(x);
-            }, function() {
-                expect(result).toEqual([1, 2, 1, 2]);
-                done();
-            });
-        });
-    });
+			var result = [];
+			s2.forEach(function(x) {
+				result.push(x);
+			}, function() {
+				expect(result).toEqual([1, 2, 1, 2]);
+				done();
+			});
+		});
+	});
 
-    describe('reduce', function() {
+	describe('reduce', function() {
 
 		describe('when stream is empty', function() {
 			it('should reduce to initial', function(done) {
