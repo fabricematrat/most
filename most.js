@@ -64,7 +64,23 @@ function fromArray(array) {
  * @param {increment} the increment between each element
  * @return {Stream} stream
  */
-function range(first, last, increment) {
+function rangeSampleWithArray(first, last, increment) {
+	if(last === void 0) {
+		last = first;
+		first = 0;
+	}
+	if(increment === void 0) {
+		increment = 1;
+	}
+	var array = [];
+	array[0] = first;
+	for(var i= 1; i < Math.ceil((last - first)/increment); i++) {
+		array.push(array[i-1] + increment);
+	}
+	return fromArray(array);
+}
+
+function rangeSampleWithStreamConcat(first, last, increment) {
     if(last === void 0) {
         last = first;
         first = 0;
@@ -72,13 +88,24 @@ function range(first, last, increment) {
     if(increment === void 0) {
         increment = 1;
     }
-    var array = [];
-    array[0] = first;
-    for(var i= 1; i < Math.ceil((last - first)/increment); i++) {
-        array.push(array[i-1] + increment);
+    var s = Stream.of(first);
+    var previous = first;
+    while ((previous + increment) <= last) {
+        var x = previous + increment;
+        s = s.concat(Stream.of(x));
+        previous = x;
     }
-    return fromArray(array);
+    return s;
 }
+
+function infiniteRangeSampleWithStreamConcat(first, increment) {
+    if(increment === void 0) {
+        increment = 1;
+    }
+    var s = Stream.of(first);
+    return s.increment(increment);
+}
+
 
 /**
  * arguments -> Stream
