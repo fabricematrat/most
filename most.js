@@ -58,6 +58,29 @@ function fromArray(array) {
 }
 
 /**
+ * ArrayLike -> Stream
+ * TODO FABRICE
+ * @param {first} the first element of the range
+ * @param {last} the last element of the range
+ * @return {Stream} stream
+ */
+function range(first, last, increment) {
+    if(last === void 0) {
+        last = first;
+        first = 0;
+    }
+    if(increment === void 0) {
+        increment = 1;
+    }
+    var array = [];
+    array[0] = first;
+    for(var i= 1; i < Math.ceil((last - first)/increment); i++) {
+        array.push(array[i-1] + increment);
+    }
+    return fromArray(array);
+}
+
+/**
  * arguments -> Stream
  * @param {...*?} items
  * @return {Stream} stream
