@@ -534,38 +534,38 @@ describe('Stream', function() {
 		});
 	});
 
-    describe('zip', function() {
+	describe('zip', function() {
 
-        it('should zip two stream', function(done) {
-            var first = [1, 2, 3];
-            var second = [4, 5, 6];
-            var s1 = new Stream(function(next, end) {
-                first.forEach(next);
-                end();
-            });
+		it('should zip two stream', function(done) {
+			var first = [1, 2, 3];
+			var second = [4, 5, 6];
+			var s1 = new Stream(function(next, end) {
+				first.forEach(next);
+				end();
+			});
 
-            var s2 = new Stream(function(next, end) {
-                second.forEach(next);
-                end();
-            });
+			var s2 = new Stream(function(next, end) {
+				second.forEach(next);
+				end();
+			});
 
-            var s3 = s1.zip(s2);
-            expect(s3).not.toBe(s1);
-            expect(s3).not.toBe(s2);
-            expect(s3 instanceof s1.constructor).toBeTrue();
+			var s3 = s1.zip(s2);
+			expect(s3).not.toBe(s1);
+			expect(s3).not.toBe(s2);
+			expect(s3 instanceof s1.constructor).toBeTrue();
 
-            var result = [];
-            s3.forEach(function(x) {
-                result.push(x);
-            }, function() {
-                expect(result).toEqual([[1, 4], [2, 5], [3, 6]]);
-                done();
-            });
+			var result = [];
+			s3.forEach(function(x) {
+				result.push(x);
+			}, function() {
+				expect(result).toEqual([[1, 4], [2, 5], [3, 6]]);
+				done();
+			});
 
-        });
-    });
+		});
+	});
 
-     describe('reduce', function() {
+	describe('reduce', function() {
 
 		describe('when stream is empty', function() {
 			it('should reduce to initial', function(done) {
