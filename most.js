@@ -44,29 +44,29 @@ function create(emitter) {
  * @return {Stream} stream
  */
 function fromArray(array) {
-    return new Stream(function(next, end) {
-        function recursive(a) {
-            if(a.length > 0) {
-                try {
-                    if (!next(a[0])) {
-                        async(function() {
-                            recursive(a.slice(1));
-                        });
-                    } else {
-                        end();
-                    }
-                } catch (e) {
-                    end(e);
-                }
-            } else {
-                end();
-            }
-        }
+	return new Stream(function(next, end) {
+		function recursive(a) {
+			if(a.length > 0) {
+				try {
+					if (!next(a[0])) {
+						async(function() {
+							recursive(a.slice(1));
+						});
+					} else {
+						end();
+					}
+				} catch (e) {
+					end(e);
+				}
+			} else {
+				end();
+			}
+		}
 
-        recursive(array);
+		recursive(array);
 
-        return noop;
-    });
+		return noop;
+	});
 }
 
 /**
