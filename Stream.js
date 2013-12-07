@@ -215,23 +215,35 @@ proto.takeWhile = function(predicate) {
 	});
 };
 
-proto.zip = function(other) {
-    return this.zipWith(other, identity);
+proto.repeat = function(n){
+    var i =0;
+    var predicate = function() {
+        i++;
+        return (i < n);
+    };
+    return this.repeatUntil(predicate)
 };
 
-proto.zipWith = function(other, f) {
-    // TODO: Should this accept an array?  a stream of streams?
+proto.cycle = function() {
+    return this.repeatUntil(function() {
+        return true;
+    });
+};
+
+proto.repeatUntil = function(predicate){
     var stream = this._emitter;
-    return new Stream(function(next, end) {
-        var buffer = [];
-        stream(function(x) {
-            buffer.push(x);
-        }, function(e) {
+    var recursive = function(next, end) {
+        stream(next, function(e){
             if(e == null) {
-                other._emitter(function(x) {next([buffer.shift(), f(x)]);}, end);
+                predicate() ? recursive(next, end) : end();
+            } else {
+                end(e);
             }
-            end(e);
         });
+    };
+
+    return new Stream(function(next, end) {
+        recursive(next, end);
     });
 };
 

@@ -534,38 +534,29 @@ describe('Stream', function() {
 		});
 	});
 
-    describe('zip', function() {
-
-        it('should zip two stream', function(done) {
-            var first = [1, 2, 3];
-            var second = [4, 5, 6];
+    describe('repeat', function() {
+        it('should stop after 2 round', function(done) {
+            var first = [1, 2];
             var s1 = new Stream(function(next, end) {
                 first.forEach(next);
                 end();
             });
 
-            var s2 = new Stream(function(next, end) {
-                second.forEach(next);
-                end();
-            });
-
-            var s3 = s1.zip(s2);
-            expect(s3).not.toBe(s1);
-            expect(s3).not.toBe(s2);
-            expect(s3 instanceof s1.constructor).toBeTrue();
+            var s2 = s1.repeat(2);
+            expect(s2).not.toBe(s1);
+            expect(s2 instanceof s1.constructor).toBeTrue();
 
             var result = [];
-            s3.forEach(function(x) {
+            s2.forEach(function(x) {
                 result.push(x);
             }, function() {
-                expect(result).toEqual([[1, 4], [2, 5], [3, 6]]);
+                expect(result).toEqual([1, 2, 1, 2]);
                 done();
             });
-
         });
     });
 
-     describe('reduce', function() {
+    describe('reduce', function() {
 
 		describe('when stream is empty', function() {
 			it('should reduce to initial', function(done) {
