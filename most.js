@@ -58,10 +58,10 @@ function fromArray(array) {
 }
 
 /**
- * ArrayLike -> Stream
- * TODO FABRICE
+ * Create a stream representing a range
  * @param {first} the first element of the range
  * @param {last} the last element of the range
+ * @param {increment} the increment between each element
  * @return {Stream} stream
  */
 function range(first, last, increment) {
