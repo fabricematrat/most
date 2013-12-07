@@ -216,19 +216,7 @@ proto.takeWhile = function(predicate) {
 };
 
 proto.zip = function(other) {
-    // TODO: Should this accept an array?  a stream of streams?
-    var stream = this._emitter;
-    return new Stream(function(next, end) {
-        var buffer = [];
-        stream(function(x) {
-            buffer.push(x);
-        }, function(e) {
-            if(e == null) {
-                other._emitter(function(x) {next([buffer.shift(), x]);}, end);
-            }
-            end(e);
-        });
-    });
+    return this.zipWith(other, identity);
 };
 
 proto.zipWith = function(other, f) {
