@@ -534,6 +534,33 @@ describe('Stream', function() {
 		});
 	});
 
+	describe('unfold', function() {
+		it('should do unfold by decrementing the values and stop at 0', function(done) {
+			var values = [5];
+			var s1 = new Stream(function(next, end) {
+				values.forEach(next);
+				end();
+			});
+			var f = function(x) {
+				if (x === 0) {
+					return null;
+				} else {
+					return x;
+				}
+			};
+			var g = function(x) {
+				return x-1;
+			}
+			var results = [];
+			s1.unfold(f, g).forEach(function(x) {
+				results.push(x);
+			}, function() {
+				expect(results).toEqual([5, 4, 3, 2, 1, 0]);
+				done();
+			});
+		});
+	});
+
 	describe('reduce', function() {
 
 		describe('when stream is empty', function() {

@@ -215,6 +215,32 @@ proto.takeWhile = function(predicate) {
 	});
 };
 
+proto.unfold = function(fn,g) {
+	var self = this;
+	var unsubscribed;
+	return new Stream(function(next, end) {
+		var f = function(e) {
+			var r = function() {
+				self = self.flatMap(function(x){
+					return Stream.of(g(x));
+				});
+				self._emitter(function(x) {
+					next(x);
+					unsubscribed = fn(x);
+				}, function(e) {
+					if(!e) {
+						!unsubscribed ? end() : f(e);
+					} else {
+						end(e);
+					}
+				});
+			};
+			!e ? async(r) : end(e);
+		};
+		self._emitter(next, f);
+	});
+};
+
 proto.buffer = function(windower) {
 	var stream = this._emitter;
 	return new Stream(function(next, end) {
