@@ -199,9 +199,9 @@ proto.dropWhile = function(predicate) {
 	});
 };
 
-proto.iterate = function(fn) {
+proto.unfold = function(fn, g) {
 	var self = this;
-	var unsubscribed = false;
+	var unsubscribed;
 	return new Stream(function(next, end) {
 		var f = function(e) {
 			var r = function() {
@@ -209,19 +209,26 @@ proto.iterate = function(fn) {
 					return Stream.of(fn(x));
 				});
 				self._emitter(function(x) {
-					next(x) && (unsubscribed = true);
+					unsubscribed = next(x);
+					if(typeof g === 'function') {
+						unsubscribed = !g(x);
+					}
 				}, function(e) {
-					if(e == null) {
+					if(!e) {
 						unsubscribed ? end() : f(e);
 					} else {
 						end(e);
 					}
 				});
-			}
-			e == null ? async(r) : end(e);
+			};
+			!e ? async(r) : end(e);
 		};
 		self._emitter(next, f);
 	});
+};
+
+proto.iterate = function(f) {
+	return this.unfold(f);
 };
 
 proto.cycle = function() {
