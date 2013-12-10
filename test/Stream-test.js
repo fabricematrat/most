@@ -534,6 +534,44 @@ describe('Stream', function() {
 		});
 	});
 
+	describe('cycle', function() {
+		it('should cycle the stream when one element', function(done) {
+			var s1 = Stream.of(1);
+			var results = [];
+			s1.cycle().take(5).forEach(function(x) {
+				results.push(x);
+			}, function() {
+				expect(results).toEqual([1, 1, 1, 1, 1]);
+				done();
+			});
+
+		});
+		it('it should cycle the stream with multiple elements', function(done) {
+			var values = [1, 2, 3];
+			var s1 = new Stream(function(next, end) {
+				values.forEach(next);
+				end();
+			});
+			var results = [];
+			s1.cycle().take(9).forEach(function(x) {
+				results.push(x);
+			}, function() {
+				expect(results).toEqual([1, 2, 3, 1, 2, 3, 1, 2, 3]);
+				done();
+			});
+		});
+		it('it should cycle the stream with multiple elements', function(done) {
+			var s1 = Stream.of(1);
+			var results = [];
+			s1.iterate(function(x) {return x+1;}).take(5).forEach(function(x) {
+				results.push(x);
+			}, function() {
+				expect(results).toEqual([1, 2, 3, 4, 5]);
+				done();
+			});
+		});
+	});
+
 	describe('reduce', function() {
 
 		describe('when stream is empty', function() {

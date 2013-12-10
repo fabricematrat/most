@@ -81,9 +81,10 @@ proto.forEach = function(next, end) {
 
 	function safeNext(x) {
 		if(ended || unsubscribed) {
-			return;
+			return true;
 		}
 		next(x);
+		return false;
 	}
 
 	function safeEnd() {
@@ -196,6 +197,35 @@ proto.dropWhile = function(predicate) {
 			next(x);
 		}, end);
 	});
+};
+
+proto.iterate = function(fn) {
+	var self = this;
+	var unsubscribed = false;
+	return new Stream(function(next, end) {
+		var f = function(e) {
+			var r = function() {
+				self = self.flatMap(function(x){
+					return Stream.of(fn(x));
+				});
+				self._emitter(function(x) {
+					next(x) && (unsubscribed = true);
+				}, function(e) {
+					if(e == null) {
+						unsubscribed ? end() : f(e);
+					} else {
+						end(e);
+					}
+				});
+			}
+			e == null ? async(r) : end(e);
+		};
+		self._emitter(next, f);
+	});
+};
+
+proto.cycle = function() {
+	return this.iterate(identity);
 };
 
 proto.take = function(m) {
