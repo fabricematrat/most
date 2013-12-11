@@ -22,7 +22,7 @@ create.fromEventEmitter = fromEventEmitter;
 create.fromPromise = fromPromise;
 
 var slice = Array.prototype.slice;
-var forEach = Array.prototype.forEach;
+var every = Array.prototype.every;
 
 /**
  * (f, g) -> h -> Stream
@@ -47,22 +47,17 @@ function fromArray(array) {
 	return new Stream(function(next, end) {
 		function recursive(a) {
 			if(a.length > 0) {
-				try {
-					if (!next(a[0])) {
-						async(function() {
-							recursive(a.slice(1));
-						});
-					} else {
-						end();
+				async(function() {
+					try {
+						next(a[0]) ? end() : recursive(a.slice(1));
+					} catch (e) {
+						end(e);
 					}
-				} catch (e) {
-					end(e);
-				}
+				});
 			} else {
 				end();
 			}
 		}
-
 		recursive(array);
 
 		return noop;
