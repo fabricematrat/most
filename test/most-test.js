@@ -33,7 +33,7 @@ describe('most', function() {
 				originalEmitter(function(x) {
 					count++;
 					return next(x);
-				} ,end);
+				}, end);
 			};
 
 			var results = [];
