@@ -22,7 +22,6 @@ create.fromEventEmitter = fromEventEmitter;
 create.fromPromise = fromPromise;
 
 var slice = Array.prototype.slice;
-var every = Array.prototype.every;
 
 /**
  * (f, g) -> h -> Stream
@@ -49,7 +48,7 @@ function fromArray(array) {
 			if(a.length > 0) {
 				async(function() {
 					try {
-						next(a[0]) ? end() : recursive(a.slice(1));
+						next(a[0]) ? end() : recursive(slice.call(a, 1));
 					} catch (e) {
 						end(e);
 					}
