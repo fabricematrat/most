@@ -81,11 +81,11 @@ proto.forEach = function(next, end) {
 
 	function safeNext(x) {
 		if(ended || unsubscribed) {
-			return true;
+			return false;
 		}
 		next(x);
 
-        return false;
+		return true;
 	}
 
 	function safeEnd() {
@@ -138,7 +138,7 @@ proto.filter = function(predicate) {
 	});
 };
 
-proto.merge = function(other) {
+proto.interleave = function(other) {
 	var stream = this._emitter;
 	return new Stream(function(next, end) {
 		var count = 2;
@@ -224,6 +224,36 @@ proto.buffer = function(windower) {
 		stream(function(x) {
 			buffer = windower(next, x, buffer||[]);
 		}, end);
+	});
+};
+
+proto.zip = function(other) {
+	var stream = this._emitter;
+	var buffer = {};
+	var f = function(next) {
+		if(buffer.first != void 0 && buffer.second != void 0) {
+			next([buffer.first, buffer.second]);
+			buffer = {};
+		}
+	};
+	return new Stream(function(next, end) {
+		var count = 2;
+		function handleEnd(e) {
+			count -= 1;
+			if(e != null) {
+				end(e);
+			} else if (count === 0) {
+				end();
+			}
+		}
+		stream(function(x) {
+				buffer.first = x;
+				f(next);
+		}, handleEnd);
+		other._emitter(function(x) {
+				buffer.second = x;
+				f(next);
+		}, handleEnd);
 	});
 };
 

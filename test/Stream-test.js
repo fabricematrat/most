@@ -2,8 +2,15 @@ require('buster').spec.expose();
 var expect = require('buster').expect;
 
 var Stream = require('../Stream');
+var asyncEvery = require('../array/async');
 var sentinel = { value: 'sentinel' };
 var other = { value: 'other' };
+
+function fromArray(array) {
+	return new Stream(function(next, end) {
+		asyncEvery(array, next, end);
+	});
+}
 
 function assertSame(done, p1, p2) {
 	p1.forEach(function(x) {
@@ -331,16 +338,28 @@ describe('Stream', function() {
 
 	});
 
-	describe('merge', function() {
+	describe('interleave', function() {
 
 		it('should contain items from both', function(done) {
 			var result = [];
-			Stream.of(1).merge(Stream.of(2))
+			Stream.of(1).interleave(Stream.of(2))
 				.forEach(function(x) {
 					result.push(x);
 				}, function(e) {
 					expect(e).not.toBeDefined();
 					expect(result).toEqual([1, 2]);
+					done();
+				});
+		});
+
+		it('should contain items from both interleaved', function(done) {
+			var result = [];
+			fromArray([1, 2, 3]).interleave(fromArray([1, 2, 3]))
+				.forEach(function(x) {
+					result.push(x);
+				}, function(e) {
+					expect(e).not.toBeDefined();
+					expect(result).toEqual([1, 1, 2, 2, 3, 3]);
 					done();
 				});
 		});
@@ -351,7 +370,7 @@ describe('Stream', function() {
 			new Stream(function(next, end) {
 				end(sentinel);
 			})
-				.merge(Stream.of())
+				.interleave(Stream.of())
 				.forEach(nextSpy, function(e) {
 					expect(nextSpy).not.toHaveBeenCalled();
 					expect(e).toBe(sentinel);
@@ -365,12 +384,33 @@ describe('Stream', function() {
 			new Stream(function(next, end) {
 				next();
 				end();
-			}).merge(new Stream(function(next, end) {
+			}).interleave(new Stream(function(next, end) {
 					next();
 					end();
 			})).forEach(nextSpy, function(e) {
 				expect(e).not.toBeDefined();
 				expect(nextSpy).toHaveBeenCalledTwice();
+				done();
+			});
+		});
+	});
+
+	describe('zip', function() {
+		it('should zip two stream', function(done) {
+			var first = [1, 2, 3];
+			var second = [4, 5, 6];
+			var s1 = fromArray(first);
+			var s2 = fromArray(second);
+			var s3 = s1.zip(s2);
+			expect(s3).not.toBe(s1);
+			expect(s3).not.toBe(s2);
+			expect(s3 instanceof s1.constructor).toBeTrue();
+
+			var result = [];
+			s3.forEach(function(x) {
+				result.push(x);
+			}, function() {
+				expect(result).toEqual([[1, 4], [2, 5], [3, 6]]);
 				done();
 			});
 		});
@@ -389,6 +429,18 @@ describe('Stream', function() {
 				expect(results).toEqual([sentinel, 1]);
 				done();
 			});
+		});
+
+		it('should contain items from both in right order', function(done) {
+			var result = [];
+			fromArray([1, 2, 3]).concat(fromArray([1, 2, 3]))
+				.forEach(function(x) {
+					result.push(x);
+				}, function(e) {
+					expect(e).not.toBeDefined();
+					expect(result).toEqual([1, 2, 3, 1, 2, 3]);
+					done();
+				});
 		});
 
 		it('should satisfy left identity', function(done) {

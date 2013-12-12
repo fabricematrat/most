@@ -9,7 +9,7 @@
  */
 
 var Stream = require('./Stream');
-var async = require('./async');
+var asyncEvery = require('./array/async');
 
 module.exports = create;
 
@@ -44,20 +44,7 @@ function create(emitter) {
  */
 function fromArray(array) {
 	return new Stream(function(next, end) {
-		function recursive(a) {
-			if(a.length > 0) {
-				async(function() {
-					try {
-						next(a[0]) ? end() : recursive(slice.call(a, 1));
-					} catch (e) {
-						end(e);
-					}
-				});
-			} else {
-				end();
-			}
-		}
-		recursive(array);
+		asyncEvery(array, next, end);
 
 		return noop;
 	});
