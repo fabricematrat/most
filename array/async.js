@@ -1,7 +1,7 @@
 (function(define) {
 define(function(require) {
 
-	var async, slice
+	var async, slice;
 	async  = require('../async');
 	slice = Array.prototype.slice;
 	
@@ -10,7 +10,8 @@ define(function(require) {
 			if(a.length > 0) {
 				async(function() {
 					try {
-						next(a[0]) ? iterate(slice.call(a, 1)) : end();
+						var cont = next(a[0]);
+						(cont || cont == undefined) ? iterate(slice.call(a, 1)) : end();
 					} catch (e) {
 						end(e);
 					}
