@@ -247,14 +247,46 @@ proto.zip = function(other) {
 			}
 		}
 		stream(function(x) {
-				buffer.first = x;
-				f(next);
+			buffer.first = x;
+			f(next);
 		}, handleEnd);
 		other._emitter(function(x) {
-				buffer.second = x;
-				f(next);
+			buffer.second = x;
+			f(next);
 		}, handleEnd);
 	});
+};
+
+proto.unfold = function(fn, g) {
+	var self = this;
+	var cont = true;
+	return new Stream(function(next, end) {
+		var f = function(e) {
+			var r = function() {
+				self = self.flatMap(function(x){
+					return Stream.of(fn(x));
+				});
+				self._emitter(function(x) {
+					cont = next(x);
+					if(typeof g === 'function') {
+						cont = !g(x);
+					}
+				}, function(e) {
+					if(e == null) {
+						(cont === false) ? end() : f(e);
+					} else {
+						end(e);
+					}
+				});
+			};
+			e == null ? async(r) : end(e);
+		};
+		self._emitter(next, f);
+	});
+};
+
+proto.iterate = function(f) {
+	return this.unfold(f);
 };
 
 proto.bufferCount = function(n) {

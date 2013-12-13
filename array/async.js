@@ -10,8 +10,7 @@ define(function(require) {
 			if(a.length > 0) {
 				async(function() {
 					try {
-						var cont = next(a[0]);
-						(cont || cont == undefined) ? iterate(slice.call(a, 1)) : end();
+						next(a[0])? iterate(slice.call(a, 1)) : end();
 					} catch (e) {
 						end(e);
 					}

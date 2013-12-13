@@ -22,7 +22,7 @@ function assertSame(done, p1, p2) {
 }
 
 describe('Stream', function() {
-
+/*
 	describe('forEach', function() {
 		it('should call emitter in future stack', function(done) {
 			var spy = this.spy();
@@ -393,29 +393,47 @@ describe('Stream', function() {
 				done();
 			});
 		});
-	});
+	});  */
 
 	describe('zip', function() {
-		it('should zip two stream', function(done) {
-			var first = [1, 2, 3];
-			var second = [4, 5, 6];
-			var s1 = fromArray(first);
-			var s2 = fromArray(second);
-			var s3 = s1.zip(s2);
+//		it('should zip two stream', function(done) {
+//			var first = [1, 2, 3];
+//			var second = [4, 5, 6];
+//			var s1 = fromArray(first);
+//			var s2 = fromArray(second);
+//			var s3 = s1.zip(s2);
+//			expect(s3).not.toBe(s1);
+//			expect(s3).not.toBe(s2);
+//			expect(s3 instanceof s1.constructor).toBeTrue();
+//
+//			var result = [];
+//			s3.forEach(function(x) {
+//				result.push(x);
+//			}, function() {
+//				expect(result).toEqual([[1, 4], [2, 5], [3, 6]]);
+//				done();
+//			});
+//		});
+		it('should zip two infinite streams', function(done) {
+			var first = [1];
+			var second = [1];
+			var s1 = fromArray(first).iterate(function(x) {return x+1;});
+			var s2 = fromArray(second).iterate(function(x) {return x+1;});
+			var s3 = s1.interleave(s2);
 			expect(s3).not.toBe(s1);
 			expect(s3).not.toBe(s2);
 			expect(s3 instanceof s1.constructor).toBeTrue();
 
 			var result = [];
-			s3.forEach(function(x) {
+			s3.take(3).forEach(function(x) {
 				result.push(x);
 			}, function() {
-				expect(result).toEqual([[1, 4], [2, 5], [3, 6]]);
+				expect(result).toEqual([[1, 1], [2, 2], [3, 3]]);
 				done();
 			});
 		});
 	});
-
+  /*
 	describe('concat', function() {
 
 		it('should return a stream containing items from concatenated streams in correct order', function(done) {
@@ -781,5 +799,5 @@ describe('Stream', function() {
 			}, done);
 		});
 	});
-
+    */
 });
