@@ -105,7 +105,7 @@ proto.map = function(f) {
 	var stream = this._emitter;
 	return new Stream(function(next, end) {
 		stream(function(x) {
-			next(f(x));
+			return next(f(x));
 		}, end);
 	});
 };
@@ -172,7 +172,7 @@ proto.tap = function(f) {
 	return new Stream(function(next, end) {
 		stream(function(x) {
 			f(x);
-			next(x);
+			return next(x);
 		}, end);
 	});
 };
@@ -191,11 +191,11 @@ proto.dropWhile = function(predicate) {
 		stream(function(x) {
 			if (predicate !== void 0) {
 				if (predicate(x)) {
-					return;
+					return true;
 				}
 				predicate = void 0;
 			}
-			next(x);
+			return next(x);
 		}, end);
 	});
 };
@@ -213,6 +213,7 @@ proto.takeWhile = function(predicate) {
 	return new Stream(function(next, end) {
 		var unsubscribe = self.forEach(function(x) {
 			predicate(x) ? next(x) : unsubscribe();
+			return true;
 		}, end);
 	});
 };
@@ -230,9 +231,13 @@ proto.buffer = function(windower) {
 proto.zip = function(other) {
 	var stream = this._emitter;
 	var buffer = {};
-	var f = function(next) {
+	var cont = true;
+	var f = function(next, end) {
 		if(buffer.first != void 0 && buffer.second != void 0) {
-			next([buffer.first, buffer.second]);
+			if(!next([buffer.first, buffer.second])) {
+				end();
+				cont = false;
+			}
 			buffer = {};
 		}
 	};
@@ -248,40 +253,42 @@ proto.zip = function(other) {
 		}
 		stream(function(x) {
 			buffer.first = x;
-			f(next);
+			f(next, end);
+			return cont;
 		}, handleEnd);
 		other._emitter(function(x) {
 			buffer.second = x;
-			f(next);
+			f(next, end);
+			return cont;
 		}, handleEnd);
 	});
 };
 
-proto.unfold = function(fn, g) {
+proto.unfold = function(f, g) {
 	var self = this;
 	var cont = true;
 	return new Stream(function(next, end) {
-		var f = function(e) {
+		var iterate = function(e) {
 			var r = function() {
 				self = self.flatMap(function(x){
-					return Stream.of(fn(x));
+					return Stream.of(f(x));
 				});
 				self._emitter(function(x) {
 					cont = next(x);
 					if(typeof g === 'function') {
-						cont = !g(x);
+						cont = !(g(x) === void 0);
 					}
 				}, function(e) {
-					if(e == null) {
-						(cont === false) ? end() : f(e);
-					} else {
+					if(e != null) {
 						end(e);
+					} else {
+						cont ? iterate() : end();
 					}
 				});
 			};
 			e == null ? async(r) : end(e);
 		};
-		self._emitter(next, f);
+		self._emitter(next, iterate);
 	});
 };
 
@@ -367,6 +374,7 @@ proto.reduce = function(f, initial) {
 		var value = initial;
 		stream(function(x) {
 			value = f(value, x);
+			return true;
 		}, function(e) {
 			if(e == null) {
 				next(value);
@@ -386,6 +394,7 @@ proto.reduceRight = function(f, initial) {
 		var buffer = [];
 		stream(function(x) {
 			buffer.push(x);
+			return true;
 		}, function(e) {
 			if(e == null) {
 				next(buffer.reduceRight(f, initial));

@@ -10,7 +10,7 @@ define(function(require) {
 			if(a.length > 0) {
 				async(function() {
 					try {
-						next(a[0])? iterate(slice.call(a, 1)) : end();
+						(next(a[0]) === false) ? end() : iterate(slice.call(a, 1)) ;
 					} catch (e) {
 						end(e);
 					}
