@@ -105,7 +105,7 @@ proto.map = function(f) {
 	var stream = this._emitter;
 	return new Stream(function(next, end) {
 		stream(function(x) {
-			return next(f(x));
+			next(f(x));
 		}, end);
 	});
 };
@@ -172,7 +172,7 @@ proto.tap = function(f) {
 	return new Stream(function(next, end) {
 		stream(function(x) {
 			f(x);
-			return next(x);
+			next(x);
 		}, end);
 	});
 };
@@ -191,11 +191,11 @@ proto.dropWhile = function(predicate) {
 		stream(function(x) {
 			if (predicate !== void 0) {
 				if (predicate(x)) {
-					return true;
+					return;
 				}
 				predicate = void 0;
 			}
-			return next(x);
+			next(x);
 		}, end);
 	});
 };
@@ -213,7 +213,6 @@ proto.takeWhile = function(predicate) {
 	return new Stream(function(next, end) {
 		var unsubscribe = self.forEach(function(x) {
 			predicate(x) ? next(x) : unsubscribe();
-			return true;
 		}, end);
 	});
 };
@@ -230,20 +229,23 @@ proto.buffer = function(windower) {
 
 proto.zip = function(other) {
 	var stream = this._emitter;
-	var buffer = {};
-	var cont = true;
-	var f = function(next, end) {
-		if(buffer.first != void 0 && buffer.second != void 0) {
-			if(!next([buffer.first, buffer.second])) {
-				end();
-				cont = false;
-			}
-			buffer = {};
-		}
-	};
 	return new Stream(function(next, end) {
-		var count = 2;
+		var first, count = 2, pursue = true;
+
+		stream(function(x) {
+			first = x;
+			return pursue;
+		}, handleEnd);
+		other._emitter(function(x) {
+			if(next([first, x]) === false) {
+				end();
+				pursue = false;
+			}
+			return pursue;
+		}, handleEnd);
+
 		function handleEnd(e) {
+			pursue = false;
 			count -= 1;
 			if(e != null) {
 				end(e);
@@ -251,42 +253,32 @@ proto.zip = function(other) {
 				end();
 			}
 		}
-		stream(function(x) {
-			buffer.first = x;
-			f(next, end);
-			return cont;
-		}, handleEnd);
-		other._emitter(function(x) {
-			buffer.second = x;
-			f(next, end);
-			return cont;
-		}, handleEnd);
 	});
 };
 
 proto.unfold = function(f, g) {
 	var self = this;
-	var cont = true;
+	var pursue = true;
 	return new Stream(function(next, end) {
 		var iterate = function(e) {
-			var r = function() {
+			var handleEnd = function() {
 				self = self.flatMap(function(x){
 					return Stream.of(f(x));
 				});
 				self._emitter(function(x) {
-					cont = next(x);
+					pursue = next(x);
 					if(typeof g === 'function') {
-						cont = !(g(x) === void 0);
+						pursue = !(g(x) === void 0);
 					}
 				}, function(e) {
 					if(e != null) {
 						end(e);
 					} else {
-						cont ? iterate() : end();
+						pursue ? iterate() : end();
 					}
 				});
 			};
-			e == null ? async(r) : end(e);
+			e == null ? async(handleEnd) : end(e);
 		};
 		self._emitter(next, iterate);
 	});
