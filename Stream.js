@@ -110,6 +110,15 @@ proto.map = function(f) {
 	});
 };
 
+proto.group = function() {
+	var stream = this._emitter;
+	return new Stream(function(next, end) {
+		stream(function(x) {
+			;
+		}, end);
+	});
+};
+
 proto.ap = function(stream2) {
 	return this.flatMap(function(f) {
 		return stream2.map(f);
@@ -134,6 +143,31 @@ proto.filter = function(predicate) {
 	return new Stream(function(next, end) {
 		stream(function(x) {
 			predicate(x) && next(x);
+		}, end);
+	});
+};
+
+proto.findIndex = function(predicate) {
+	var stream = this._emitter;
+	var i = -1;
+	return new Stream(function(next, end) {
+		stream(function(x) {
+			i++;
+			if(predicate(x)) {
+				next(i);
+				return false;
+			}
+		}, end);
+	});
+};
+
+proto.findIndices = function(predicate) {
+	var stream = this._emitter;
+	var i = -1;
+	return new Stream(function(next, end) {
+		stream(function(x) {
+			i++;
+			predicate(x) && next(i);
 		}, end);
 	});
 };
@@ -394,7 +428,6 @@ proto.reduce = function(f, initial) {
 		var value = initial;
 		stream(function(x) {
 			value = f(value, x);
-			return true;
 		}, function(e) {
 			if(e == null) {
 				next(value);
@@ -414,7 +447,6 @@ proto.reduceRight = function(f, initial) {
 		var buffer = [];
 		stream(function(x) {
 			buffer.push(x);
-			return true;
 		}, function(e) {
 			if(e == null) {
 				next(buffer.reduceRight(f, initial));
