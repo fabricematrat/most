@@ -209,10 +209,20 @@ proto.take = function(m) {
 };
 
 proto.takeWhile = function(predicate) {
-	var self = this;
+//	var self = this;
+//	return new Stream(function(next, end) {
+//		var unsubscribe = self.forEach(function(x) {
+//			predicate(x) ? next(x) : unsubscribe();
+//		}, end);
+//	});
+	var stream = this._emitter;
 	return new Stream(function(next, end) {
-		var unsubscribe = self.forEach(function(x) {
-			predicate(x) ? next(x) : unsubscribe();
+		stream(function(x) {
+			if (predicate(x)) {
+				next(x);
+			} else {
+				return false;
+			}
 		}, end);
 	});
 };
@@ -227,7 +237,7 @@ proto.buffer = function(windower) {
 	});
 };
 
-proto.zip = function(other) {
+proto.zipWith = function(other, f) {
 	var stream = this._emitter;
 	return new Stream(function(next, end) {
 		var first, count = 2, pursue = true;
@@ -237,7 +247,7 @@ proto.zip = function(other) {
 			return pursue;
 		}, handleEnd);
 		other._emitter(function(x) {
-			if(next([first, x]) === false) {
+			if(next(f(first, x)) === false) {
 				end();
 				pursue = false;
 			}
@@ -250,6 +260,34 @@ proto.zip = function(other) {
 			if(e != null) {
 				end(e);
 			} else if (count === 0) {
+				end();
+			}
+		}
+	});
+};
+
+proto.zip = function(other) {
+	return this.zipWith(other, function(x, y) {
+		return [x, y];
+	});
+};
+
+proto.intersperse = function(val) {
+	var stream = this._emitter;
+	return new Stream(function(next, end) {
+		var pursue = true;
+
+		stream(function(x) {
+			next(x);
+			pursue = next(val);
+			return pursue;
+		}, handleEnd);
+
+		function handleEnd(e) {
+			pursue = false;
+			if(e != null) {
+				end(e);
+			} else {
 				end();
 			}
 		}

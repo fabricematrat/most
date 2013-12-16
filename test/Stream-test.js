@@ -580,6 +580,88 @@ describe('Stream', function() {
 
 	});
 
+	describe('intersperse', function() {
+
+		it('should add one more item', function(done) {
+			var next = this.spy();
+
+			Stream.of(1).intersperse(2).forEach(next, function() {
+				expect(next).toHaveBeenCalledTwice();
+				done();
+			});
+		});
+
+		it('should intersperse element in between', function(done) {
+			var first = [1, 2, 3];
+			var s1 = fromArray(first);
+			var s2 = s1.intersperse(4);
+			expect(s2).not.toBe(s1);
+			expect(s2 instanceof s1.constructor).toBeTrue();
+
+			var result = [];
+			s2.forEach(function(x) {
+				result.push(x);
+			}, function() {
+				expect(result).toEqual([1, 4, 2, 4, 3, 4]);
+				done();
+			});
+		});
+
+		it('should call end on error', function(done) {
+			Stream.of(1).intersperse(1).forEach(function() {
+				throw sentinel;
+			}, function(e) {
+				expect(e).toBe(sentinel);
+				done();
+			});
+		});
+
+		it('should intersperse even for infinite streams', function(done) {
+			var first = [1];
+			var s1 = fromArray(first).iterate(function(x) {return x+1;});
+			var s2 = s1.intersperse(4);
+			expect(s2).not.toBe(s1);
+			expect(s2 instanceof s1.constructor).toBeTrue();
+
+			var result = [];
+			var i = 0;
+			var unsubscribe = s2.forEach(function(x) {
+				result.push(x);
+				i++;
+				(i >= 4) && unsubscribe();
+			}, function() {
+				expect(result).toEqual([1, 4, 2, 4]);
+				done();
+			});
+		});
+
+		it('should call end on error even for infinite stream', function(done) {
+			var f = this.spy();
+			var s1 = Stream.of(1).iterate(f);
+			s1.intersperse(1)
+				.forEach(function() {
+					throw sentinel;
+				}, function(e) {
+					expect(e).toBe(sentinel);
+					done();
+				});
+		});
+
+		it('should not call end when no error', function(done) {
+			var nextSpy = this.spy();
+
+			new Stream(function(next, end) {
+				next();
+				end();
+			}).intersperse(1).forEach(nextSpy, function(e) {
+				expect(e).not.toBeDefined();
+				expect(nextSpy).toHaveBeenCalledTwice();
+				done();
+			});
+		});
+
+	});
+
 	describe('concat', function() {
 
 		it('should return a stream containing items from concatenated streams in correct order', function(done) {
