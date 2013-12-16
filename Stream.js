@@ -209,20 +209,10 @@ proto.take = function(m) {
 };
 
 proto.takeWhile = function(predicate) {
-//	var self = this;
-//	return new Stream(function(next, end) {
-//		var unsubscribe = self.forEach(function(x) {
-//			predicate(x) ? next(x) : unsubscribe();
-//		}, end);
-//	});
-	var stream = this._emitter;
+	var self = this;
 	return new Stream(function(next, end) {
-		stream(function(x) {
-			if (predicate(x)) {
-				next(x);
-			} else {
-				return false;
-			}
+		var unsubscribe = self.forEach(function(x) {
+			predicate(x) ? next(x) : unsubscribe();
 		}, end);
 	});
 };
