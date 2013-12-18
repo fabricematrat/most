@@ -359,6 +359,44 @@ describe('Stream', function() {
 
 	});
 
+	describe('findIndex', function() {
+
+		it('should return a stream containing the first index satisfying the predicate', function(done) {
+			var s = Stream.of(1).iterate(function(x) {return x + 1;}).findIndex(function(x) {
+				return x >= 2;
+			});
+
+			var count = 0, a = -1;
+			s.forEach(function(x) {
+				a = x;
+				count++;
+			}, function(e) {
+				expect(a).toEqual(1);
+				expect(count).toEqual(1);
+				done();
+			});
+		});
+
+	});
+
+	describe('elementIndex', function() {
+
+		it('should return a stream containing the first index that is equals to the element', function(done) {
+			var s = Stream.of(1).iterate(function(x) {return x + 1;}).elementIndex(2);
+
+			var count = 0, a = -1;
+			s.forEach(function(x) {
+				a = x;
+				count++;
+			}, function(e) {
+				expect(a).toEqual(1);
+				expect(count).toEqual(1);
+				done();
+			});
+		});
+
+	});
+
 	describe('findIndices', function() {
 
 		it('should return a stream containing all the indices satisfying the predicate', function(done) {
@@ -377,24 +415,24 @@ describe('Stream', function() {
 
 	});
 
-//	describe('group', function() {
-//
-//		it('should return a stream of elements ', function(done) {
-//			var s = fromArray(['M', 'i' ,'s', 's', 'i', 's', 's', 'i', 'p', 'p', 'i']).group(function(x) {
-//				return x > 2;
-//			});
-//
-//			var a = [];
-//			s.forEach(function(x) {
-//				a.push(x);
-//			}, function(e) {
-//				expect(a).toEqual(['M', 'i', 'ss', 'i', 'ss', 'i', 'pp', 'i']);
-//				done();
-//			});
-//		});
-//
-//	});
-//
+	describe('group', function() {
+
+		it('should return a stream of elements ', function(done) {
+			var s = fromArray(['M', 'i' ,'s', 's', 'i', 's', 's', 'i', 'p', 'p', 'i']).group(function(x) {
+				return x > 2;
+			});
+
+			var a = [];
+			s.forEach(function(x) {
+				a.push(x);
+			}, function(e) {
+				expect(a).toEqual(['M', 'i', 'ss', 'i', 'ss', 'i', 'pp', 'i']);
+				done();
+			});
+		});
+
+	});
+
 	describe('interleave', function() {
 
 		it('should contain items from both', function(done) {

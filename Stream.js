@@ -111,11 +111,31 @@ proto.map = function(f) {
 };
 
 proto.group = function() {
+// How do make it work with other than char/string ?
 	var stream = this._emitter;
 	return new Stream(function(next, end) {
+		var buffer = [];
 		stream(function(x) {
-			;
-		}, end);
+			if(buffer.length == 0) {
+				buffer.push(x);
+				return;
+			}
+			if (buffer[0] === x) {
+				buffer.push(x);
+			} else {
+				next(buffer.join(""));
+				buffer = [x];
+			}
+		}, function(e) {
+			if (e != null) {
+				end(e);
+				return;
+			}
+			if (buffer.length > 0) {
+				next(buffer.join(""));
+			}
+			end();
+		});
 	});
 };
 
@@ -158,6 +178,29 @@ proto.findIndex = function(predicate) {
 				return false;
 			}
 		}, end);
+	});
+};
+
+proto.elementIndex = function(element) {
+	return this.findIndex(function(x) {
+		return element === x;
+	});
+};
+
+proto.findIndices = function(predicate) {
+	var stream = this._emitter;
+	var i = -1;
+	return new Stream(function(next, end) {
+		stream(function(x) {
+			i++;
+			predicate(x) && next(i);
+		}, end);
+	});
+};
+
+proto.elementIndices = function(element) {
+	return this.findIndices(function(x) {
+		return element === x;
 	});
 };
 
