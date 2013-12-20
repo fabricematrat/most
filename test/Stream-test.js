@@ -359,26 +359,6 @@ describe('Stream', function() {
 
 	});
 
-	describe('findIndex', function() {
-
-		it('should return a stream containing the first index satisfying the predicate', function(done) {
-			var s = Stream.of(1).iterate(function(x) {return x + 1;}).findIndex(function(x) {
-				return x >= 2;
-			});
-
-			var count = 0, a = -1;
-			s.forEach(function(x) {
-				a = x;
-				count++;
-			}, function(e) {
-				expect(a).toEqual(1);
-				expect(count).toEqual(1);
-				done();
-			});
-		});
-
-	});
-
 	describe('elementIndex', function() {
 
 		it('should return a stream containing the first index that is equals to the element', function(done) {
@@ -415,18 +395,76 @@ describe('Stream', function() {
 
 	});
 
-	describe('group', function() {
+	describe('elementIndices', function() {
 
-		it('should return a stream of elements ', function(done) {
-			var s = fromArray(['M', 'i' ,'s', 's', 'i', 's', 's', 'i', 'p', 'p', 'i']).group(function(x) {
-				return x > 2;
-			});
+		it('should return a stream containing all the indices where the element was found', function(done) {
+			var s = fromArray([1, 2 , 1, 2]).elementIndices(2);
 
 			var a = [];
 			s.forEach(function(x) {
 				a.push(x);
 			}, function(e) {
-				expect(a).toEqual(['M', 'i', 'ss', 'i', 'ss', 'i', 'pp', 'i']);
+				expect(a).toEqual([1, 3]);
+				done();
+			});
+		});
+
+	});
+
+	describe('group', function() {
+
+		it('should return a stream of elements grouped by array', function(done) {
+			var s = fromArray([1, 2, 2, 3, 4, 4]).group();
+
+			var a = [];
+			s.forEach(function(x) {
+				a.push(x);
+			}, function(e) {
+				expect(a).toEqual([[1], [2, 2], [3], [4, 4]]);
+				done();
+			});
+		});
+
+		it('should return a stream of elements for other than string', function(done) {
+			var s = Stream.of(1).iterate(function(x) {return x + 1;}).group();
+
+			var a = [], i = 0;
+			s.forEach(function(x) {
+				a.push(x);
+				i++;
+				(i >= 3) && unsunscribe();
+			}, function(e) {
+				expect(a).toEqual([[1], [2], [3]]);
+				done();
+			});
+		});
+
+	});
+
+	describe('distinct', function() {
+
+		it('should return a stream of unique elements ', function(done) {
+			var s = fromArray(['M', 'i' ,'s', 's', 'i', 's', 's', 'i', 'p', 'p', 'i']).distinct();
+
+			var a = [];
+			s.forEach(function(x) {
+				a.push(x);
+			}, function(e) {
+				expect(a).toEqual(['M', 'i', 's', 'p']);
+				done();
+			});
+		});
+
+		it('should return a stream of unique elements even with infinite stream', function(done) {
+			var s = Stream.of(1).iterate(function(x) {return x+1;}).distinct();
+
+			var a = [], i = 0;
+			s.forEach(function(x) {
+				a.push(x);
+				i++;
+				(i >= 3) && unsubscribe();
+			}, function(e) {
+				expect(a).toEqual([1, 2, 3]);
 				done();
 			});
 		});
