@@ -111,29 +111,23 @@ proto.map = function(f) {
 };
 
 proto.group = function() {
-// How do make it work with other than char/string ?
 	var stream = this._emitter;
 	return new Stream(function(next, end) {
 		var buffer = [];
 		stream(function(x) {
-			if(buffer.length == 0) {
-				buffer.push(x);
-				return;
-			}
-			if (buffer[0] === x) {
+			if(buffer.length == 0 || buffer[0] === x) {
 				buffer.push(x);
 			} else {
-				next(buffer.join(""));
+				var cont = next(buffer);
 				buffer = [x];
+				return cont;
 			}
 		}, function(e) {
 			if (e != null) {
 				end(e);
 				return;
 			}
-			if (buffer.length > 0) {
-				next(buffer.join(""));
-			}
+			buffer.length > 0 && next(buffer);
 			end();
 		});
 	});
@@ -169,8 +163,8 @@ proto.filter = function(predicate) {
 
 proto.findIndex = function(predicate) {
 	var stream = this._emitter;
-	var i = -1;
 	return new Stream(function(next, end) {
+		var i = -1;
 		stream(function(x) {
 			i++;
 			if(predicate(x)) {
@@ -189,11 +183,26 @@ proto.elementIndex = function(element) {
 
 proto.findIndices = function(predicate) {
 	var stream = this._emitter;
-	var i = -1;
 	return new Stream(function(next, end) {
+		var i = -1;
 		stream(function(x) {
 			i++;
-			predicate(x) && next(i);
+			if (predicate(x)) {
+				return next(i);
+			}
+		}, end);
+	});
+};
+
+proto.distinct = function() {
+	var stream = this._emitter;
+	return new Stream(function(next, end) {
+		var cache = {};
+		stream(function(x) {
+			if(!(x in cache)) {
+				cache[x] = true;
+				return next(x);
+			}
 		}, end);
 	});
 };
@@ -201,17 +210,6 @@ proto.findIndices = function(predicate) {
 proto.elementIndices = function(element) {
 	return this.findIndices(function(x) {
 		return element === x;
-	});
-};
-
-proto.findIndices = function(predicate) {
-	var stream = this._emitter;
-	var i = -1;
-	return new Stream(function(next, end) {
-		stream(function(x) {
-			i++;
-			predicate(x) && next(i);
-		}, end);
 	});
 };
 
